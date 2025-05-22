@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include <ps5/kernel.h> // تأكد من أن هذا الملف موجود في SDK ويحتوي على sceKernelSendNotificationRequest
+#include <ps5/kernel.h> // Make sure this file is in the SDK and contains sceKernelSendNotificationRequest
 
 #define DB_PATH "/system_data/priv/mms/app.db"
 #define APPMETA_BASE "/user/appmeta"
@@ -24,26 +24,26 @@ typedef struct notify_request {
 
 int sceKernelSendNotificationRequest(int device, notify_request_t* req, size_t size, int flags);
 
-// مسار سجل السجلات
+// Log History Path
 #define LOG_FILE_PATH "/data/logs.txt"
 
-// دالة لكتابة الرسائل إلى السجل
+// Function to write messages to the log
 void write_log(const char *fmt, ...) {
     FILE *log_file = fopen(LOG_FILE_PATH, "a");
     if (log_file == NULL) {
-        // إذا فشلنا في فتح الملف، لا نستطيع تسجيل السجل
+        // If we fail to open the file, we cannot record the log.
         return;
     }
 
     va_list args;
     va_start(args, fmt);
-    vfprintf(log_file, fmt, args);  // الكتابة إلى السجل
+    vfprintf(log_file, fmt, args);  // write to log
     va_end(args);
     
-    fclose(log_file);  // غلق الملف بعد الكتابة
+    fclose(log_file);  // Close file after writing
 }
 
-// دالة لإرسال إشعار PS5
+// Function to send PS5 notification
 static void send_notification_fmt(const char *fmt, ...) {
     notify_request_t req = {0};
     va_list ap;
@@ -52,7 +52,7 @@ static void send_notification_fmt(const char *fmt, ...) {
     va_end(ap);
     sceKernelSendNotificationRequest(0, &req, sizeof(req), 0);
 
-    // الآن نقوم بنسخ قائمة المعاملات إلى متغير آخر لكي لا نفقده بعد استخدامه في vsnprintf
+    // Now we copy the list of parameters to another variable so that we do not lose it after using it in vsnprintf.
     va_list args_copy;
     va_copy(args_copy, ap);
     write_log(fmt, args_copy);
@@ -114,7 +114,7 @@ int main() {
                         if (sqlite3_step(update_stmt) == SQLITE_DONE) {
                             printf("Update the class✅ %d Using: %s\n", rowid, new_logo_info);
 
-                            // إرسال إشعار
+                            // Send notification
                             char notif[256];
                             snprintf(notif, sizeof(notif), "The class has been updated %d Successfully ✅", rowid);
                             send_notification_fmt(notif);
